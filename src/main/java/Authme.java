@@ -71,7 +71,7 @@ public class Authme extends Plugin {
 
     public boolean createNewDatabase(Player player, String name, String uuid, boolean isAdmin, String id, String pw) throws SQLException {
         if(!check(uuid) && !checkid(id)){
-            PreparedStatement stmt = conn.prepareStatement("INSERT INTO 'main','players' ('name','uuid','isadmin','accountid','accountpw') VALUES (?,?,?,?,?)");
+            PreparedStatement stmt = conn.prepareStatement("INSERT INTO 'players' ('name','uuid','isadmin','accountid','accountpw') VALUES (?,?,?,?,?)");
             stmt.setString(1,name);
             stmt.setString(2,uuid);
             stmt.setBoolean(3,isAdmin);
