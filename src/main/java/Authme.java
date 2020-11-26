@@ -59,6 +59,12 @@ public class Authme extends Plugin {
         handler.<Player>register("register", "<new_id> <new_password> <password_repeat>", "Login to account", (arg, player) -> {
             try{
                 Class.forName("org.mindrot.jbcrypt.BCrypt");
+                // Check if the two passwords are the same
+                if (!arg[1].equals(arg[2])) {
+                    player.sendMessage("Those passwords didn't match. Try again.");
+                    return;
+                }
+
                 String hashed = BCrypt.hashpw(arg[1], BCrypt.gensalt(11));
                 if(createNewDatabase(player,player.name,player.uuid,player.isAdmin,arg[0],hashed)){
                     load(player);
