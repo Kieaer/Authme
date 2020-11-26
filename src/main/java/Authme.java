@@ -115,7 +115,8 @@ public class Authme extends Plugin {
     }
 
     public boolean login(Player player, String id, String pw) {
-        try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM players WHERE accountid = ?, accountpw = ?")) {
+        try(PreparedStatement stmt =
+                    conn.prepareStatement("SELECT * FROM players WHERE accountid = ? and accountpw = ?")) {
             stmt.setString(1, id);
             stmt.setString(2, pw);
             try (ResultSet rs = stmt.executeQuery()) {
