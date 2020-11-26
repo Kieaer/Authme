@@ -23,5 +23,5 @@ jar {
 
 shadowJar {
     archiveFileName = "${project.archivesBaseName}.jar"
-    minimize()
+//    minimize()
 }
