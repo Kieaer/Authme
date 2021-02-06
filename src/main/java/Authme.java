@@ -2,16 +2,17 @@ import arc.Core;
 import arc.Events;
 import arc.util.CommandHandler;
 import mindustry.Vars;
-import mindustry.entities.type.Player;
 import mindustry.game.EventType;
 import mindustry.game.Team;
-import mindustry.gen.Call;
-import mindustry.plugin.Plugin;
+import mindustry.gen.Groups;
+import mindustry.gen.Playerc;
+import mindustry.mod.Plugin;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
 
-import static mindustry.Vars.*;
+import static mindustry.Vars.netServer;
+import static mindustry.Vars.state;
 
 public class Authme extends Plugin {
     Connection conn;
@@ -38,8 +39,8 @@ public class Authme extends Plugin {
         }
 
         Events.on(EventType.PlayerJoin.class, e->{
-            e.player.setTeam(nocore(e.player));
-            Call.onPlayerDeath(e.player);
+            e.player.team(nocore(e.player));
+            e.player.unit().kill();
             if(login(e.player)){
                 load(e.player);
             } else {
@@ -50,17 +51,17 @@ public class Authme extends Plugin {
 
     @Override
     public void registerClientCommands(CommandHandler handler) {
-        handler.<Player>register("login", "<id> <password>", "Login to account", (arg, player) -> {
+        handler.<Playerc>register("login", "<id> <password>", "Login to account", (arg, player) -> {
             String hashed = BCrypt.hashpw(arg[1], BCrypt.gensalt(11));
             if (login(player, arg[0], hashed)) {
                 load(player);
             }
         });
-        handler.<Player>register("register", "<new_id> <new_password> <password_repeat>", "Login to account", (arg, player) -> {
+        handler.<Playerc>register("register", "<new_id> <new_password> <password_repeat>", "Login to account", (arg, player) -> {
             try{
                 Class.forName("org.mindrot.jbcrypt.BCrypt");
                 String hashed = BCrypt.hashpw(arg[1], BCrypt.gensalt(11));
-                if(createNewDatabase(player,player.name,player.uuid,player.isAdmin,arg[0],hashed)){
+                if(createNewDatabase(player,player.name(),player.uuid(),player.admin(),arg[0],hashed)){
                     load(player);
                 }
             }catch (Exception e){
@@ -69,7 +70,7 @@ public class Authme extends Plugin {
         });
     }
 
-    public boolean createNewDatabase(Player player, String name, String uuid, boolean isAdmin, String id, String pw) throws SQLException {
+    public boolean createNewDatabase(Playerc player, String name, String uuid, boolean isAdmin, String id, String pw) throws SQLException {
         if(!check(uuid) && !checkid(id)){
             PreparedStatement stmt = conn.prepareStatement("INSERT INTO 'main','players' ('name','uuid','isadmin','accountid','accountpw') VALUES (?,?,?,?,?)");
             stmt.setString(1,name);
@@ -108,7 +109,7 @@ public class Authme extends Plugin {
         return false;
     }
 
-    public boolean login(Player player, String id, String pw) {
+    public boolean login(Playerc player, String id, String pw) {
         try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM players WHERE accountid = ?, accountpw = ?")) {
             stmt.setString(1, id);
             stmt.setString(2, pw);
@@ -125,12 +126,12 @@ public class Authme extends Plugin {
         return false;
     }
 
-    public boolean login(Player player) {
+    public boolean login(Playerc player) {
         try(PreparedStatement stmt = conn.prepareStatement("SELECT * FROM players WHERE uuid = ?")) {
-            stmt.setString(1, player.uuid);
+            stmt.setString(1, player.uuid());
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    if (rs.getString("uuid").equals(player.uuid)) return true;
+                    if (rs.getString("uuid").equals(player.uuid())) return true;
                 }
             }
         } catch (SQLException e){
@@ -139,23 +140,23 @@ public class Authme extends Plugin {
         return false;
     }
 
-    public void load(Player player){
-        player.setTeam(state.rules.pvp ? netServer.assignTeam(player, playerGroup.all()) : Team.sharded);
-        Call.onPlayerDeath(player);
+    public void load(Playerc player){
+        player.team(state.rules.pvp ? netServer.assignTeam(player.as(), Groups.player) : Team.sharded);
+        player.unit().kill();
         player.sendMessage("[green]Login successful!");
     }
 
-    public Team nocore(Player player){
-        int index = player.getTeam().id+1;
-        while (index != player.getTeam().id){
-            if (index >= Team.all().length){
+    public Team nocore(Playerc player){
+        int index = player.team().id+1;
+        while (index != player.team().id){
+            if (index >= Team.all.length){
                 index = 0;
             }
-            if (Vars.state.teams.get(Team.all()[index]).cores.isEmpty()){
-                return Team.all()[index];
+            if (Vars.state.teams.get(Team.all[index]).cores.isEmpty()){
+                return Team.all[index];
             }
             index++;
         }
-        return player.getTeam();
+        return player.team();
     }
 }

@@ -1,7 +1,4 @@
-plugins {
-    id 'java-library'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
-}
+apply plugin: 'java-library'
 
 repositories{
     mavenCentral()
@@ -10,18 +7,15 @@ repositories{
 }
 
 dependencies{
-    compileOnly "com.github.Anuken.Arc:arc-core:v121.4"
-    compileOnly "com.github.Anuken.Mindustry:core:v121.4"
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.28.0'
-    compile group: 'de.svenkubiak', name: 'jBCrypt', version: '0.4.1'
+    compileOnly 'com.github.Anuken.Arc:arc-core:+'
+    compileOnly 'com.github.Anuken.Mindustry:core:+'
+    implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '+'
+    implementation group: 'de.svenkubiak', name: 'jBCrypt', version: '+'
 }
 
 jar {
-    enabled = false // disable original
-    dependsOn(shadowJar) // add new task
-}
-
-shadowJar {
     archiveFileName = "${project.archivesBaseName}.jar"
-    minimize()
+    from{
+        configurations.runtimeClasspath.collect{it.isDirectory() ? it : zipTree(it)}
+    }
 }
